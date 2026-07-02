@@ -1,0 +1,15 @@
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/GlApplication.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/config/SeedDataConfig.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/controller/ChartOfAccountController.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/controller/JournalEntryController.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/controller/PeriodController.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/controller/ReportController.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/repository/AccountingPeriodRepository.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/repository/ChartOfAccountRepository.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/repository/JournalEntryLineRepository.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/repository/JournalEntryRepository.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/service/AccountingPeriodService.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/service/ChartOfAccountService.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/service/JournalEntryService.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/service/LedgerService.java
+/home/swijaya/.openclaw/workspace/projects/nova-erp-v2/apps/nova-gl-service/src/main/java/com/novaerp/gl/service/ReportService.java

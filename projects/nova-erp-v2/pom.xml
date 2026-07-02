@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ============================================================ -->
+    <!-- Nova ERP v2 — Parent POM                                     -->
+    <!-- All service modules inherit from this parent                 -->
+    <!-- Centralized dependency versions, Java 21 target              -->
+    <!-- Build ordering: auth/gl first → dependent services last      -->
+    <!-- ============================================================ -->
+
+    <groupId>com.novaerp</groupId>
+    <artifactId>nova-erp-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Nova ERP v2 — Parent Project</name>
+
+    <!-- ============================================================ -->
+    <!-- Properties: centralized version management                     -->
+    <!-- ============================================================ -->
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <!-- Spring Boot 3.4.x (latest stable) -->
+        <spring-boot.version>3.4.5</spring-boot.version>
+        <spring-cloud.version>2024.0.1</spring-cloud.version>
+
+        <!-- Resilience & Observability -->
+        <resilience4j.version>2.3.0</resilience4j.version>
+        <opentelemetry-bom.version>1.48.0</opentelemetry-bom.version>
+
+        <!-- Database / JPA -->
+        <spring-data-jpa.version>3.4.5</spring-data-jpa.version>
+        <flyway.version>11.21.0</flyway.version>
+        <postgresql.driver.version>42.7.8</postgresql.driver.version>
+
+        <!-- API / Docs -->
+        <springdoc-openapi.version>2.8.9</springdoc-openapi.version>
+
+        <!-- Testing -->
+        <junit-jupiter.version>5.12.2</junit-jupiter.version>
+        <mockito.version>5.17.0</mockito.version>
+        <pact.version>4.6.18</pact.version>
+
+        <!-- Build plugins -->
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
+    </properties>
+
+    <!-- ============================================================ -->
+    <!-- Module build ordering (auth/gl first, then dependent services)  -->
+    <!-- Maven reactor builds in this order                           -->
+    <!-- ============================================================ -->
+    <modules>
+        <!-- Shared library — every service depends on this -->
+        <module>nova-common</module>
+
+        <!-- Foundation services built FIRST -->
+        <module>apps/nova-auth-service</module>
+        <module>apps/nova-gl-service</module>
+
+        <!-- Core business modules (depend on auth/gl) -->
+        <module>apps/nova-products-service</module>
+        <module>apps/nova-orders-service</module>
+        <module>apps/nova-invoices-service</module>
+        <module>apps/nova-purchasing-service</module>
+        <module>apps/nova-inventory-service</module>
+
+        <!-- Advanced modules -->
+        <module>apps/nova-budget-service</module>
+        <module>apps/nova-cashflow-service</module>
+        <module>apps/nova-hr-service</module>
+        <module>apps/nova-manufacturing-service</module>
+        <module>apps/nova-assets-service</module>
+
+        <!-- Infrastructure -->
+        <module>apps/nova-eureka-server</module>
+        <module>apps/nova-config-server</module>
+
+        <!-- API Gateway (depends on eureka + config) -->
+        <module>infra/nova-gateway</module>
+    </modules>
+
+    <!-- ============================================================ -->
+    <!-- Dependency Management — centralized versions for all modules  -->
+    <!-- Each child inherits these without repeating version numbers   -->
+    <!-- ============================================================ -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot BOM (manages spring.* dependency versions) -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Spring Cloud BOM (manages spring-cloud.* dependency versions) -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Shared library (nova-common) — version managed centrally -->
+            <dependency>
+                <groupId>com.novaerp</groupId>
+                <artifactId>nova-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Resilience4j BOM for circuit breaker, retry, bulkhead versions -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bom</artifactId>
+                <version>${resilience4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- OpenTelemetry BOM for tracing instrumentation versions -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${opentelemetry-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- PostgreSQL JDBC driver -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.driver.version}</version>
+            </dependency>
+
+            <!-- Flyway DB migration tooling (managed centrally) -->
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-core</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- ============================================================ -->
+    <!-- Build plugin management — standardized compiler + boot config  -->
+    <!-- All child modules inherit these without repeating           -->
+    <!-- ============================================================ -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Standardized Java compilation across all services -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <parameters>true</parameters> <!-- Spring Boot 3.x requires parameter names -->
+                    </configuration>
+                </plugin>
+
+                <!-- Standardized Spring Boot packaging across all services -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <!-- Default resources directory for all modules -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering> <!-- Allow ${property} substitution in application.yml -->
+            </resource>
+        </resources>
+    </build>
+
+    <!-- ============================================================ -->
+    <!-- Repositories — Spring milestones/snapshots if needed         -->
+    <!-- ============================================================ -->
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
+
+</project>

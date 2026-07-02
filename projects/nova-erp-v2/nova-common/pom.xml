@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ============================================================ -->
+    <!-- nova-common — Shared library for all Nova ERP v2 services     -->
+    <!-- Every service depends on this module via pom.xml dependency   -->
+    <!-- Contains: resilience, tracing, logging, audit model           -->
+    <!-- ============================================================ -->
+
+    <parent>
+        <groupId>com.novaerp</groupId>
+        <artifactId>nova-erp-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>nova-common</artifactId>
+    <name>Nova ERP v2 — Common Library</name>
+    <description>Shared library: resilience patterns, distributed tracing, structured logging, audit model</description>
+
+    <!-- ============================================================ -->
+    <!-- Dependencies (no Spring Boot starter needed for a pure lib)   -->
+    <!-- But we include spring-boot-autoconfigure to enable @Bean auto-  -->
+    <!-- configuration when this jar is on the classpath of any service-->
+    <!-- ============================================================ -->
+    <dependencies>
+
+        <!-- === Resilience4j (circuit breaker, retry, bulkhead) === -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+        </dependency>
+
+        <!-- OpenTelemetry API + W3C TraceContext propagator for distributed tracing headers through Gateway to services -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-context</artifactId>
+        </dependency>
+
+        <!-- Spring Boot autoconfiguration (enables @Configuration classes in this lib to be picked up automatically) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <!-- SLF4J for structured logging with MDC correlation IDs (JSON format via Logback JSON layout dependency — services add logstash-logback-encoder) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Spring Context for @Component, @Service annotations used in this library -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
+        <!-- Jakarta Servlet API — required by TraceContextFilter (implements jakarta.servlet.Filter) and HttpServletRequest usage for W3C trace context propagation through Gateway to services -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jakarta Persistence API — required by AuditEntity (@MappedSuperclass, @Column, @Lob, etc.) -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jackson (JSON) — needed by audit log entity serialization/deserialization of before/after state diffs via reflection-based comparison at save time capturing field-level changes without manual code in each service's business logic layer -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- === Testing (provided scope — only needed during development) === -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

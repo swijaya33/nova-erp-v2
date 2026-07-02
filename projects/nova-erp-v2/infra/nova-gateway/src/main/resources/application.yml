@@ -1,0 +1,249 @@
+# ============================================================
+# API Gateway — Spring Cloud Gateway Configuration (Port 8080)
+# Dynamic routing via Eureka · JWT validation · Rate limiting 
+# Circuit breaker aggregation · CORS policy enforcement
+# W3C TraceContext header propagation for distributed tracing
+# ============================================================
+
+server:
+  port: ${GATEWAY_PORT:8080}
+
+spring:
+  application:
+    name: nova-gateway
+  
+  # ── Cloud Gateway — Dynamic Routing via Eureka (no hardcoded URLs) ──
+  cloud:
+    gateway:
+      # Global CORS policy
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      
+      # Route definitions — dynamic via Eureka service discovery
+      routes:
+        # Auth Service (port 4021)
+        - id: nova-auth-service
+          uri: lb://nova-auth-service
+          predicates:
+            - Path=/api/v2/auth/**,/auth/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: authCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+      
+        # GL Service (port 4031) — financial backbone, circuit breaker critical
+        - id: nova-gl-service
+          uri: lb://nova-gl-service
+          predicates:
+            - Path=/api/v2/gl/**,/gl/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: glCircuitBreaker
+                fallbackUri: forward:/fallback/gl
+      
+        # Products Service (port 4041) — cached via Redis, high-read workload
+        - id: nova-products-service
+          uri: lb://nova-products-service
+          predicates:
+            - Path=/api/v2/products/**,/products/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: productsCircuitBreaker
+                fallbackUri: forward:/fallback/products
+      
+        # Orders Service (port 4051) — Saga orchestrator, needs reliability
+        - id: nova-orders-service
+          uri: lb://nova-orders-service
+          predicates:
+            - Path=/api/v2/orders/**,/orders/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: ordersCircuitBreaker
+                fallbackUri: forward:/fallback/orders
+      
+        # Invoices Service (port 4061) — auto-generation from Orders saga
+        - id: nova-invoices-service
+          uri: lb://nova-invoices-service
+          predicates:
+            - Path=/api/v2/invoices/**,/invoices/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: invoicesCircuitBreaker
+                fallbackUri: forward:/fallback/invoices
+      
+        # Purchasing Service (port 4071) — encumbrance integration with Budget
+        - id: nova-purchasing-service
+          uri: lb://nova-purchasing-service
+          predicates:
+            - Path=/api/v2/purchasing/**,/purchasing/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: purchasingCircuitBreaker
+                fallbackUri: forward:/fallback/purchasing
+      
+        # Inventory Service (port 4075) — MySQL, warehouse operations
+        - id: nova-inventory-service
+          uri: lb://nova-inventory-service
+          predicates:
+            - Path=/api/v2/inventory/**,/inventory/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: inventoryCircuitBreaker
+                fallbackUri: forward:/fallback/inventory
+      
+        # Budget Service (port 4081) — encumbrance engine, approval workflow
+        - id: nova-budget-service
+          uri: lb://nova-budget-service
+          predicates:
+            - Path=/api/v2/budget/**,/budget/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: budgetCircuitBreaker
+                fallbackUri: forward:/fallback/budget
+      
+        # Cashflow Service (port 4085) — cash management, bank reconciliation
+        - id: nova-cashflow-service
+          uri: lb://nova-cashflow-service
+          predicates:
+            - Path=/api/v2/cashflow/**,/cashflow/**
+          filters:
+            - StripPrefix=0
+            - name: CircuitBreaker
+              args:
+                name: cashflowCircuitBreaker
+                fallbackUri: forward:/fallback/cashflow
+      
+        # HR Service (port 4091) — payroll, employee management
+        - id: nova-hr-service
+          uri: lb://nova-hr-service
+          predicates:
+            - Path=/api/v2/hr/**,/hr/**
+          filters:
+            - StripPrefix=0
+      
+        # Manufacturing Service (port 4095) — production planning, BOM
+        - id: nova-manufacturing-service
+          uri: lb://nova-manufacturing-service
+          predicates:
+            - Path=/api/v2/manufacturing/**,/manufacturing/**
+          filters:
+            - StripPrefix=0
+      
+        # Assets Service (port 4097) — depreciation, asset tracking
+        - id: nova-assets-service
+          uri: lb://nova-assets-service
+          predicates:
+            - Path=/api/v2/assets/**,/assets/**
+          filters:
+            - StripPrefix=0
+
+      # Global JWT validation filter (runs on every request before routing)
+      default-filters:
+        - name: JwtValidation
+      
+      # Rate limiting — Redis-backed sliding window counter per IP/client
+      # Default: 120 requests/minute, burst allowed up to 60 extra
+      ratelimit:
+        enabled: true
+        key-resolver: "#{@ipKeyResolver}"
+        redis-rate-limiter:
+          replenishRate: 120       # sustained rate (req/min)
+          maxBurstCapacity: 180    # burst allowance
+
+# ── Eureka Client — dynamic service discovery ──
+eureka:
+  client:
+    register-with-eureka: true      # Gateway registers itself in discovery server
+    fetch-registry: true            # Fetches all registered services for routing
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+# ── Config Client — centralized config with hot-reload ──
+spring.cloud.config:
+  uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+  fail-fast: false                  # Gateway starts even if config server is down (dev mode)
+  retry:
+    max-attempts: 6
+    initial-interval: 1000
+
+# ── Circuit Breaker Configuration (Resilience4j) ──
+resilience4j:
+  circuitbreaker:
+    instances:
+      authCircuitBreaker:
+        slidingWindowSize: 10           # last 10 calls determine state
+        failureRateThreshold: 50          # open if >50% failures
+        waitDurationInOpenState: 30s     # how long before half-open probe
+        permittedNumberOfCallsInHalfOpenState: 3
+      glCircuitBreaker:
+        slidingWindowSize: 10
+        failureRateThreshold: 40          # GL is critical — more sensitive (P0)
+        waitDurationInOpenState: 60s     # longer recovery for financial service
+        permittedNumberOfCallsInHalfOpenState: 5
+      productsCircuitBreaker:
+        slidingWindowSize: 20           # higher tolerance for read-heavy service
+        failureRateThreshold: 70          # less sensitive (cached data available)
+        waitDurationInOpenState: 15s
+    default:
+      slidingWindowSize: 10
+      failureRateThreshold: 50
+      waitDurationInOpenState: 30s
+
+# ── Retry Configuration (exponential backoff + jitter) ──
+resilience4j:
+  retry:
+    instances:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+
+# ── Actuator — health monitoring for Docker Compose depends_on + Grafana ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,routes
+  endpoint:
+    health:
+      show-details: always
+    circuitbreakers:
+      enabled: true
+
+# ── Logging — structured JSON with correlation IDs (from nova-common) ──
+logging:
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","service":"gateway","traceId":"%X{traceId:-none}","spanId":"%X{spanId:-none}","message":"%m"}%n'

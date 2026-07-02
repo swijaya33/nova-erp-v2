@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ============================================================ -->
+    <!-- nova-gl-service — Nova ERP v2 Microservice                        -->
+    <!-- Inherits from nova-erp-parent for centralized dependency mgmt  -->
+    <!-- Port: see application.yml in resources                       -->
+    <!-- Database: per-service PostgreSQL (or MySQL where specified)   -->
+    <!-- ============================================================ -->
+
+    <parent>
+        <groupId>com.novaerp</groupId>
+        <artifactId>nova-erp-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>   <!-- 2 levels up from apps/<service>/ -->
+    </parent>
+
+    <artifactId>nova-gl-service</artifactId>
+    <name>Nova ERP v2 — nova-gl-service Service</name>
+
+    <!-- ============================================================ -->
+    <!-- Dependencies: Spring Boot web starter + shared library        -->
+    <!-- Each service adds its own DB driver, JPA deps as needed      -->
+    <!-- All inherit nova-common for resilience/tracing/logging/audit  -->
+    <!-- ============================================================ -->
+    <dependencies>
+
+        <!-- Shared library (nova-common) — provides circuit breaker templates, OpenTelemetry tracing autoconfiguration, structured logging MDC correlation ID setup in JSON format with trace IDs flowing from frontend request entry point down to database query execution enabling instant debugging of any production issue by searching correlation/tracking IDs across entire system without manual grep or file searching during distributed tracing sessions involving multiple service hops -->
+        <dependency>
+            <groupId>com.novaerp</groupId>
+            <artifactId>nova-common</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Web (REST controllers, embedded Tomcat) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Data JPA for repository layer -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- H2 in-memory database (development only) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- PostgreSQL JDBC driver (production profile) -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Spring Cloud Netflix Eureka Client for service discovery -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+
+        <!-- Spring Cloud Config Client for externalized config -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+
+        <!-- SpringDoc OpenAPI (Swagger UI) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc-openapi.version}</version>
+        </dependency>
+
+        <!-- Spring Boot Actuator for health checks and metrics -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <!-- ============================================================ -->
+    <!-- Build: standard Spring Boot packaging inherited from parent   -->
+    <!-- Each service produces an executable JAR via spring-boot-maven-plugin automatically configured by parent POM's pluginManagement section which sets up the compiler and boot plugins once for all child modules without repeating configuration in every individual pom.xml file across 14+ services that would create maintenance burden when versions need updating because changes must be made to single source of truth rather than hunting down version numbers scattered throughout multiple files spread across different directories within project structure -->
+    <!-- ============================================================ -->
+
+</project>
