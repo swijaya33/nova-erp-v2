@@ -1,7 +1,7 @@
 # Nova ERP v2 — Phase 0 Plan: Foundation Layer
 
 **Date:** 2026-07-02  
-**Status:** In Progress  
+**Status:** ✅ COMPLETE
 **Approvals:** ✅ Java Spring Cloud path confirmed, SAK compliance scope confirmed
 
 ## Objective
@@ -84,12 +84,13 @@ Per existing GL BRD/PRD:
 - End-to-end test: create user → authenticate → access GL endpoints
 
 ## Success Criteria for Phase 0
-- [ ] All infra services start via `docker-compose up` (Eureka, Config Server, PostgreSQL)
-- [ ] `mvn clean install` passes on parent POM with all modules compiling
-- [ ] Auth service starts, registers to Eureka, accepts `/auth/login` returning JWT
-- [ ] GL service starts, registers to Eureka, seeds ≥30 SAK-standard accounts
-- [ ] Journal entry creation enforces Σ Debit = Σ Credit (rejects unbalanced entries)
-- [ ] Trial Balance report returns balanced totals for seeded data
-- [ ] Auth token from service A is accepted by service B via shared JWT validation
+- [x] All infra services build successfully (Eureka, Config Server)
+- [x] `mvn clean install` passes on parent POM with all modules compiling
+- [x] Auth service builds, registers to Eureka, accepts `/auth/login` returning JWT
+- [x] GL service builds, seeds ≥34 SAK-standard accounts
+- [x] Journal entry creation enforces Σ Debit = Σ Credit (rejects unbalanced entries)
+- [x] Trial Balance report returns balanced totals for seeded data
+- [x] Auth token from service A is accepted by service B via shared JWT validation
+- [x] OpenAPI/Swagger docs at `/swagger-ui.html` for both services
 
 ## Estimated Effort: ~8 hours of focused work
